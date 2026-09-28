@@ -88,38 +88,6 @@ table{border-collapse:collapse;width:100%}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);align-items:center}
 .legend span{display:inline-flex;gap:6px;align-items:center}
 
-/* readable lane updates */
-.ucards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
-.ucard{border:1px solid var(--line);border-radius:10px;background:var(--surface);display:flex;flex-direction:column;min-width:0;overflow:hidden}
-.ucard-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);border-left:6px solid var(--none)}
-.ucard.G .ucard-head{border-left-color:var(--g)} .ucard.Y .ucard-head{border-left-color:var(--y)} .ucard.R .ucard-head{border-left-color:var(--r)}
-.ucard-head .cc{font-size:30px}
-.ucard-head .who{min-width:0;flex:1}
-.ucard-head .lane-name{font-size:14.5px;line-height:1.25}
-.overall{font:700 12px var(--body);letter-spacing:.6px;text-transform:uppercase;padding:4px 10px;border-radius:12px;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
-.overall.G{background:var(--g-soft);color:var(--g)} .overall.Y{background:var(--y-soft);color:var(--y)} .overall.R{background:var(--r-soft);color:var(--r)}
-.ucard-body{padding:12px 14px;display:grid;gap:14px}
-.srows{display:grid;gap:2px;margin:0;padding:0;list-style:none}
-.srow{display:grid;grid-template-columns:18px 92px 1fr;gap:8px;align-items:start;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
-.srow:last-child{border-bottom:0}
-.srow .d{width:12px;height:12px;border-radius:50%;margin-top:5px;background:var(--surface-2);border:1px dashed var(--none)}
-.srow .d.G{background:var(--g);border:0} .srow .d.Y{background:var(--y);border:0} .srow .d.R{background:var(--r);border:0}
-.srow .c{font-weight:600}
-.srow .t{color:var(--ink);overflow-wrap:anywhere}
-.srow .t .s{font-weight:700}
-.srow .t .s.G{color:var(--g)} .srow .t .s.Y{color:var(--y)} .srow .t .s.R{color:var(--r)}
-.srow .t .n{color:var(--ink)}
-.srow .t .none{color:var(--muted);font-style:italic}
-.mets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.met{background:var(--surface-2);border-radius:8px;padding:8px 10px}
-.met .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600}
-.met .v{font:700 22px/1.1 var(--display);font-variant-numeric:tabular-nums}
-.met .v small{font:500 13px var(--body);color:var(--muted)}
-.txt h4{margin:0 0 3px;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600}
-.txt p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px;line-height:1.5}
-.ucard-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
-.empty-card{padding:18px 14px;color:var(--muted);font-size:14px}
-
 /* editor */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px 0}
 .tab{border:1px solid var(--line);border-bottom:0;background:var(--surface-2);border-radius:8px 8px 0 0;padding:9px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--muted)}
@@ -134,20 +102,21 @@ textarea{min-height:84px;resize:vertical}
 .field.owner{flex:1 1 220px}
 .field.small{width:120px}
 
-.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
-.cat{border:1px solid var(--line);border-radius:9px;padding:12px;display:grid;gap:9px;background:var(--surface-2)}
-.cat.G{border-color:var(--g)} .cat.Y{border-color:var(--y)} .cat.R{border-color:var(--r)}
-.cat h3{margin:0;font:600 17px var(--display);letter-spacing:.3px}
-.ryg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.ryg button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 0;cursor:pointer;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px}
-.ryg button i{width:10px;height:10px;border-radius:50%;display:block}
-.ryg .G i{background:var(--g)} .ryg .Y i{background:var(--y)} .ryg .R i{background:var(--r)}
-.ryg button.on.G{background:var(--g);border-color:var(--g);color:#fff}
-.ryg button.on.Y{background:var(--y);border-color:var(--y);color:#fff}
-.ryg button.on.R{background:var(--r);border-color:var(--r);color:#fff}
-.ryg button.on i{background:#fff}
-.cat input{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:7px 9px;width:100%;font-size:13.5px}
-
+.cats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:18px}
+@media (max-width:820px){ .cats{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))} }
+.cat{border:1px solid var(--line);border-top:4px solid var(--none);border-radius:8px;padding:8px 10px;display:grid;gap:7px;background:var(--surface-2);min-width:0}
+.cat.G{border-top-color:var(--g)} .cat.Y{border-top-color:var(--y)} .cat.R{border-top-color:var(--r)}
+.cat h3{margin:0;font:600 15px/1.2 var(--display);letter-spacing:.3px}
+.ryg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.ryg button{min-width:0;height:34px;border-radius:7px;border:2px solid transparent;cursor:pointer;font:700 14px var(--body);display:grid;place-items:center;padding:0;transition:transform .08s}
+.ryg button.G{background:var(--g-soft);color:var(--g)} .ryg button.Y{background:var(--y-soft);color:var(--y)} .ryg button.R{background:var(--r-soft);color:var(--r)}
+.ryg button.G:hover{border-color:var(--g)} .ryg button.Y:hover{border-color:var(--y)} .ryg button.R:hover{border-color:var(--r)}
+.ryg button:hover{transform:translateY(-1px)}
+.ryg button.on{color:#fff;box-shadow:0 1px 4px rgba(14,42,71,.3)}
+.ryg button.on.G{background:var(--g);border-color:var(--g)} .ryg button.on.Y{background:var(--y);border-color:var(--y)} .ryg button.on.R{background:var(--r);border-color:var(--r)}
+.ryg.picked button:not(.on){opacity:.4}
+.ryg.picked button:not(.on):hover{opacity:1}
+.cat input{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 8px;width:100%;min-width:0;font-size:12.5px}
 .segs{margin-bottom:18px}
 .segs table{min-width:880px;font-size:13.5px}
 .segs th{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap}
@@ -184,7 +153,7 @@ textarea{min-height:84px;resize:vertical}
   .datebar{margin-left:0;width:100%}
   .datebar input{flex:1}
 }
-@media (prefers-reduced-motion:reduce){ .toast{transition:none} }
+@media (prefers-reduced-motion:reduce){ .toast,.ryg button{transition:none} .ryg button:hover{transform:none} }
 </style>
 </head>
 <body>
@@ -234,14 +203,6 @@ textarea{min-height:84px;resize:vertical}
         <span><span class="chip">–</span> Not updated yet</span>
       </div>
     </div>
-  </section>
-
-  <section class="panel" id="updatesPanel">
-    <div class="panel-head">
-      <h2 id="updatesTitle">Lane updates</h2>
-      <span class="hint">What each lane owner reported</span>
-    </div>
-    <div class="panel-body"><div class="ucards" id="ucards"></div></div>
   </section>
 
   <section class="panel" id="editorPanel">
@@ -410,31 +371,6 @@ function renderBoard(){
   }).join("");
 }
 
-function renderUpdates(){
-  $("#updatesTitle").textContent = "Lane updates · " + fmtShort(state.date);
-  const OV={G:"On track",Y:"Watch",R:"Needs support"};
-  $("#ucards").innerHTML = LANES.map(l=>{
-    const d=dayDoc(l.id), st=d?d.status||{}:{}, notes=d?d.catNotes||{}:{}, w=d?worst(st):"";
-    const head=`<div class="ucard-head"><span class="cc">${l.id}</span>
-      <div class="who"><div class="lane-name">${esc(l.name)}</div><div class="lane-owner">${esc(d&&d.owner?d.owner:l.owner)}</div></div>
-      <span class="overall ${w}">${d?(OV[w]||"No status"):"No update"}</span></div>`;
-    if(!d) return `<article class="ucard">${head}<div class="empty-card">No update saved for ${esc(fmtShort(state.date))} yet. <button class="btn sm" data-edit="${l.id}">Update ${l.id}</button></div></article>`;
-    const rows=CATS.map(c=>{ const v=st[c.k]||"", n=(notes[c.k]||"").trim();
-      return `<li class="srow"><span class="d ${v}"></span><span class="c">${c.l}</span><span class="t">${v?`<span class="s ${v}">${SLABEL[v]}</span>`:'<span class="none">Not set</span>'}${n?` <span class="n">· ${esc(n)}</span>`:""}</span></li>`; }).join("");
-    const a=totals(d.segs,"am"), p=totals(d.segs,"pm");
-    const mv=t=> t.moves===null ? `–<small> / ${t.plan}</small>` : `${t.moves}<small> / ${t.plan}</small>`;
-    const txt=(h,v)=> (v||"").trim() ? `<div class="txt"><h4>${h}</h4><p>${esc(v.trim())}</p></div>` : "";
-    return `<article class="ucard ${w}">${head}<div class="ucard-body">
-      <ul class="srows">${rows}</ul>
-      <div class="mets"><div class="met"><div class="k">AM moves</div><div class="v">${mv(a)}</div></div>
-        <div class="met"><div class="k">PM moves</div><div class="v">${mv(p)}</div></div>
-        <div class="met"><div class="k">Open shifts</div><div class="v">${d.openShifts??"–"}</div></div></div>
-      ${txt("Freight needs",d.freight)}${txt("Key callouts",d.callouts)}
-    </div><div class="ucard-foot"><span>Saved ${esc(fmtTime(d.updatedAt))} by ${esc(who(d))}</span><button class="btn sm" data-edit="${l.id}">Edit</button></div></article>`;
-  }).join("");
-}
-$("#ucards").addEventListener("click",e=>{ const b=e.target.closest("[data-edit]"); if(!b) return; switchLane(b.dataset.edit); $("#editorPanel").scrollIntoView({behavior:"smooth",block:"start"}); });
-
 /* ---------- rendering: editor ---------- */
 function renderTabs(){
   $("#tabs").innerHTML = LANES.map(l=>{
@@ -444,7 +380,7 @@ function renderTabs(){
   }).join("");
 }
 
-function numInput(i,f,v,cls){ return `<input type="number" min="0" inputmode="numeric" id="s_${i}_${f}" data-seg="${i}" data-f="${f}" class="${cls||""}" value="${v===null||v===undefined?"":esc(v)}" aria-label="${f}">`; }
+function numInput(i,f,v,cls){ return `<input type="number" min="0" inputmode="numeric" id="s_${i}_${f}" data-seg="${i}" data-f="${f}" class="${cls||""}" ${cls==="plan"?'tabindex="-1"':""} value="${v===null||v===undefined?"":esc(v)}" aria-label="${f}">`; }
 
 function renderEditor(){
   renderTabs();
@@ -454,8 +390,8 @@ function renderEditor(){
   const cats=CATS.map(c=>{
     const v=d.status[c.k]||"";
     return `<div class="cat ${v}"><h3>${c.l}</h3>
-      <div class="ryg" role="radiogroup" aria-label="${c.l} status">
-        ${["G","Y","R"].map(s=>`<button type="button" class="${s} ${v===s?"on":""}" data-cat="${c.k}" data-s="${s}" role="radio" aria-checked="${v===s}" ${ro?"disabled":""}><i></i>${SLABEL[s]}</button>`).join("")}
+      <div class="ryg ${v?"picked":""}" role="radiogroup" aria-label="${c.l} status">
+        ${["G","Y","R"].map(s=>`<button type="button" class="${s} ${v===s?"on":""}" data-cat="${c.k}" data-s="${s}" role="radio" aria-checked="${v===s}" title="${SLABEL[s]} (key ${s})" aria-label="${c.l}: ${SLABEL[s]}" ${ro?"disabled":""}>${v===s?"✓ ":""}${s}</button>`).join("")}
       </div>
       <input type="text" id="cn_${c.k}" data-catnote="${c.k}" placeholder="Note (optional)" value="${esc(d.catNotes[c.k]||"")}" ${ro?"disabled":""}>
     </div>`;
@@ -476,9 +412,9 @@ function renderEditor(){
       <div class="field small"><label for="f_open">Open shifts</label><input type="number" min="0" id="f_open" value="${d.openShifts===null||d.openShifts===undefined?"":esc(d.openShifts)}" ${ro?"disabled":""}></div>
       ${!saved&&prev&&!ro?`<button class="btn" id="copyPrev" title="Copies owner, statuses, notes and open shifts from ${esc(fmtShort(prev.date))}. Actual counts start blank.">Start from ${esc(fmtShort(prev.date))}</button>`:""}
     </div>
-    <div class="lbl" style="margin-bottom:8px">Opportunities · set Red, Yellow or Green</div>
+    <div class="lbl" style="margin-bottom:8px">Opportunities · G = on track · Y = watch · R = needs support</div>
     <div class="cats">${cats}</div>
-    <div class="lbl" style="margin-bottom:4px">Hub departs vs plan · Moves = Actual − Empty − OTR fill-in</div>
+    <div class="lbl" style="margin-bottom:4px">Hub departs vs plan · Tab or Enter moves down the column · Moves = Actual − Empty − OTR fill-in</div>
     <div class="segs scroll"><table>
       <thead>
         <tr><th></th><th colspan="6" class="grp am">AM</th><th colspan="6" class="grp pm">PM</th></tr>
@@ -541,7 +477,7 @@ function renderHistory(){
   });
   $("#histWrap").innerHTML = h+"</tbody></table>";
 }
-function renderAll(){ renderBoard(); renderUpdates(); renderEditor(); renderNet(); renderHistory(); }
+function renderAll(){ renderBoard(); renderEditor(); renderNet(); renderHistory(); }
 
 /* ---------- events ---------- */
 $("#boardBody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-lane]"); if(!tr) return; switchLane(tr.dataset.lane); $("#editorPanel").scrollIntoView({behavior:"smooth",block:"start"}); });
@@ -552,11 +488,33 @@ $("#editor").addEventListener("click",e=>{
   const b=e.target.closest(".ryg button");
   if(b){ const d=getDraft().data; d.status[b.dataset.cat] = d.status[b.dataset.cat]===b.dataset.s ? "" : b.dataset.s; markDirty();
     const box=b.closest(".cat"); const v=d.status[b.dataset.cat]; box.className="cat "+v;
-    box.querySelectorAll(".ryg button").forEach(x=>{ const on=x.dataset.s===v; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); });
+    box.querySelector(".ryg").classList.toggle("picked",!!v);
+    box.querySelectorAll(".ryg button").forEach(x=>{ const on=x.dataset.s===v; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); x.textContent=(on?"✓ ":"")+x.dataset.s; });
     return; }
   if(e.target.id==="saveLane") return saveLane();
   if(e.target.id==="copyPrev") return copyPrevious();
   if(e.target.id==="loadNewer"){ const k=key(state.date,state.lane); delete state.drafts[k]; renderEditor(); toast("Loaded the latest saved version"); }
+});
+$("#editor").addEventListener("keydown",e=>{
+  const t=e.target;
+  // G / Y / R keys pick a color when a color button has focus
+  if(t.closest && t.closest(".ryg") && /^[gyr]$/i.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey){
+    const b=t.closest(".ryg").querySelector(`button[data-s="${e.key.toUpperCase()}"]`);
+    if(b && !b.disabled){ e.preventDefault(); if(!b.classList.contains("on")) b.click(); b.focus(); }
+    return;
+  }
+  // Tab / Enter move DOWN the count columns, like Excel
+  if(t.dataset && t.dataset.seg!==undefined && (e.key==="Tab" || e.key==="Enter")){
+    const cols=["amAct","amEmpty","amOtr","amExp","pmAct","pmEmpty","pmOtr","pmExp"];
+    let ci=cols.indexOf(t.dataset.f); if(ci<0) return;
+    const rows=getDraft().data.segs.length; let ri=+t.dataset.seg;
+    const back = e.shiftKey;
+    if(back){ ri--; if(ri<0){ ci--; ri=rows-1; } } else { ri++; if(ri>=rows){ ci++; ri=0; } }
+    if(ci<0) return;                                   // let Shift+Tab leave the table normally
+    e.preventDefault();
+    const next = ci>=cols.length ? $("#f_freight") : $(`#s_${ri}_${cols[ci]}`);
+    if(next){ next.focus(); if(next.select) next.select(); }
+  }
 });
 $("#editor").addEventListener("change",e=>{ if(e.target.id==="f_owner"){ getDraft().data.owner=e.target.value; markDirty(); } });
 $("#editor").addEventListener("input",e=>{
@@ -664,7 +622,7 @@ function subscribe(){
       });
       state.histDocs=next;
       await resolveNames();
-      renderBoard(); renderUpdates(); renderHistory();
+      renderBoard(); renderHistory();
       if(!(document.activeElement && $("#editor").contains(document.activeElement))) renderEditor();
       else renderTabs();
     }, err=>{ showConn("Can't reach the shared database right now. Check your connection; the page retries every minute."); });
