@@ -88,6 +88,38 @@ table{border-collapse:collapse;width:100%}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);align-items:center}
 .legend span{display:inline-flex;gap:6px;align-items:center}
 
+/* readable lane updates */
+.ucards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.ucard{border:1px solid var(--line);border-radius:10px;background:var(--surface);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.ucard-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);border-left:6px solid var(--none)}
+.ucard.G .ucard-head{border-left-color:var(--g)} .ucard.Y .ucard-head{border-left-color:var(--y)} .ucard.R .ucard-head{border-left-color:var(--r)}
+.ucard-head .cc{font-size:30px}
+.ucard-head .who{min-width:0;flex:1}
+.ucard-head .lane-name{font-size:14.5px;line-height:1.25}
+.overall{font:700 12px var(--body);letter-spacing:.6px;text-transform:uppercase;padding:4px 10px;border-radius:12px;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.overall.G{background:var(--g-soft);color:var(--g)} .overall.Y{background:var(--y-soft);color:var(--y)} .overall.R{background:var(--r-soft);color:var(--r)}
+.ucard-body{padding:12px 14px;display:grid;gap:14px}
+.srows{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.srow{display:grid;grid-template-columns:18px 92px 1fr;gap:8px;align-items:start;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+.srow:last-child{border-bottom:0}
+.srow .d{width:12px;height:12px;border-radius:50%;margin-top:5px;background:var(--surface-2);border:1px dashed var(--none)}
+.srow .d.G{background:var(--g);border:0} .srow .d.Y{background:var(--y);border:0} .srow .d.R{background:var(--r);border:0}
+.srow .c{font-weight:600}
+.srow .t{color:var(--ink);overflow-wrap:anywhere}
+.srow .t .s{font-weight:700}
+.srow .t .s.G{color:var(--g)} .srow .t .s.Y{color:var(--y)} .srow .t .s.R{color:var(--r)}
+.srow .t .n{color:var(--ink)}
+.srow .t .none{color:var(--muted);font-style:italic}
+.mets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.met{background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.met .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600}
+.met .v{font:700 22px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.met .v small{font:500 13px var(--body);color:var(--muted)}
+.txt h4{margin:0 0 3px;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600}
+.txt p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px;line-height:1.5}
+.ucard-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.empty-card{padding:18px 14px;color:var(--muted);font-size:14px}
+
 /* editor */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px 0}
 .tab{border:1px solid var(--line);border-bottom:0;background:var(--surface-2);border-radius:8px 8px 0 0;padding:9px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--muted)}
@@ -181,7 +213,7 @@ textarea{min-height:84px;resize:vertical}
   <section class="panel" id="boardPanel">
     <div class="panel-head">
       <h2 id="boardTitle">Network at a glance</h2>
-      <span class="hint">Click a lane to update it</span>
+      <span class="hint">Hover a color for its note. Click a lane to update it.</span>
       <span class="spacer"></span>
       <button class="btn sm" id="copySummary">Copy summary</button>
     </div>
@@ -202,6 +234,14 @@ textarea{min-height:84px;resize:vertical}
         <span><span class="chip">–</span> Not updated yet</span>
       </div>
     </div>
+  </section>
+
+  <section class="panel" id="updatesPanel">
+    <div class="panel-head">
+      <h2 id="updatesTitle">Lane updates</h2>
+      <span class="hint">What each lane owner reported</span>
+    </div>
+    <div class="panel-body"><div class="ucards" id="ucards"></div></div>
   </section>
 
   <section class="panel" id="editorPanel">
@@ -370,6 +410,31 @@ function renderBoard(){
   }).join("");
 }
 
+function renderUpdates(){
+  $("#updatesTitle").textContent = "Lane updates · " + fmtShort(state.date);
+  const OV={G:"On track",Y:"Watch",R:"Needs support"};
+  $("#ucards").innerHTML = LANES.map(l=>{
+    const d=dayDoc(l.id), st=d?d.status||{}:{}, notes=d?d.catNotes||{}:{}, w=d?worst(st):"";
+    const head=`<div class="ucard-head"><span class="cc">${l.id}</span>
+      <div class="who"><div class="lane-name">${esc(l.name)}</div><div class="lane-owner">${esc(d&&d.owner?d.owner:l.owner)}</div></div>
+      <span class="overall ${w}">${d?(OV[w]||"No status"):"No update"}</span></div>`;
+    if(!d) return `<article class="ucard">${head}<div class="empty-card">No update saved for ${esc(fmtShort(state.date))} yet. <button class="btn sm" data-edit="${l.id}">Update ${l.id}</button></div></article>`;
+    const rows=CATS.map(c=>{ const v=st[c.k]||"", n=(notes[c.k]||"").trim();
+      return `<li class="srow"><span class="d ${v}"></span><span class="c">${c.l}</span><span class="t">${v?`<span class="s ${v}">${SLABEL[v]}</span>`:'<span class="none">Not set</span>'}${n?` <span class="n">· ${esc(n)}</span>`:""}</span></li>`; }).join("");
+    const a=totals(d.segs,"am"), p=totals(d.segs,"pm");
+    const mv=t=> t.moves===null ? `–<small> / ${t.plan}</small>` : `${t.moves}<small> / ${t.plan}</small>`;
+    const txt=(h,v)=> (v||"").trim() ? `<div class="txt"><h4>${h}</h4><p>${esc(v.trim())}</p></div>` : "";
+    return `<article class="ucard ${w}">${head}<div class="ucard-body">
+      <ul class="srows">${rows}</ul>
+      <div class="mets"><div class="met"><div class="k">AM moves</div><div class="v">${mv(a)}</div></div>
+        <div class="met"><div class="k">PM moves</div><div class="v">${mv(p)}</div></div>
+        <div class="met"><div class="k">Open shifts</div><div class="v">${d.openShifts??"–"}</div></div></div>
+      ${txt("Freight needs",d.freight)}${txt("Key callouts",d.callouts)}
+    </div><div class="ucard-foot"><span>Saved ${esc(fmtTime(d.updatedAt))} by ${esc(who(d))}</span><button class="btn sm" data-edit="${l.id}">Edit</button></div></article>`;
+  }).join("");
+}
+$("#ucards").addEventListener("click",e=>{ const b=e.target.closest("[data-edit]"); if(!b) return; switchLane(b.dataset.edit); $("#editorPanel").scrollIntoView({behavior:"smooth",block:"start"}); });
+
 /* ---------- rendering: editor ---------- */
 function renderTabs(){
   $("#tabs").innerHTML = LANES.map(l=>{
@@ -392,7 +457,7 @@ function renderEditor(){
       <div class="ryg" role="radiogroup" aria-label="${c.l} status">
         ${["G","Y","R"].map(s=>`<button type="button" class="${s} ${v===s?"on":""}" data-cat="${c.k}" data-s="${s}" role="radio" aria-checked="${v===s}" ${ro?"disabled":""}><i></i>${SLABEL[s]}</button>`).join("")}
       </div>
-      <input type="text" id="cn_${c.k}" data-catnote="${c.k}" placeholder="${v==="R"||v==="Y"?"What's the issue?":"Optional note"}" value="${esc(d.catNotes[c.k]||"")}" ${ro?"disabled":""}>
+      <input type="text" id="cn_${c.k}" data-catnote="${c.k}" placeholder="Note (optional)" value="${esc(d.catNotes[c.k]||"")}" ${ro?"disabled":""}>
     </div>`;
   }).join("");
 
@@ -476,7 +541,7 @@ function renderHistory(){
   });
   $("#histWrap").innerHTML = h+"</tbody></table>";
 }
-function renderAll(){ renderBoard(); renderEditor(); renderNet(); renderHistory(); }
+function renderAll(){ renderBoard(); renderUpdates(); renderEditor(); renderNet(); renderHistory(); }
 
 /* ---------- events ---------- */
 $("#boardBody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-lane]"); if(!tr) return; switchLane(tr.dataset.lane); $("#editorPanel").scrollIntoView({behavior:"smooth",block:"start"}); });
@@ -488,7 +553,6 @@ $("#editor").addEventListener("click",e=>{
   if(b){ const d=getDraft().data; d.status[b.dataset.cat] = d.status[b.dataset.cat]===b.dataset.s ? "" : b.dataset.s; markDirty();
     const box=b.closest(".cat"); const v=d.status[b.dataset.cat]; box.className="cat "+v;
     box.querySelectorAll(".ryg button").forEach(x=>{ const on=x.dataset.s===v; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); });
-    const inp=box.querySelector("input"); inp.placeholder = v==="R"||v==="Y" ? "What's the issue?" : "Optional note"; if(v==="R"||v==="Y") inp.focus();
     return; }
   if(e.target.id==="saveLane") return saveLane();
   if(e.target.id==="copyPrev") return copyPrevious();
@@ -521,8 +585,6 @@ async function saveLane(){
   const dr=getDraft(), d=dr.data;
   if(needMe()) return;
   if(!d.owner){ toast("Select a lane owner before saving"); const o=$("#f_owner"); if(o) o.focus(); return; }
-  const missing=CATS.filter(c=>(d.status[c.k]==="R"||d.status[c.k]==="Y") && !(d.catNotes[c.k]||"").trim());
-  if(missing.length){ toast("Add a note for "+missing.map(c=>c.l).join(", ")); const i=$("#cn_"+missing[0].k); if(i) i.focus(); return; }
   if(!state.db){ toast("Saving isn't available in this view"); return; }
   const body=clone(d);
   body.segs=body.segs.map(s=>{ const o={n:s.n}; NUMF.forEach(f=>o[f]=num(s[f])); return o; });
@@ -602,7 +664,7 @@ function subscribe(){
       });
       state.histDocs=next;
       await resolveNames();
-      renderBoard(); renderHistory();
+      renderBoard(); renderUpdates(); renderHistory();
       if(!(document.activeElement && $("#editor").contains(document.activeElement))) renderEditor();
       else renderTabs();
     }, err=>{ showConn("Can't reach the shared database right now. Check your connection; the page retries every minute."); });
