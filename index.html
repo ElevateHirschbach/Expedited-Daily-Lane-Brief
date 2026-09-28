@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Expedited Daily Lane Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky navy header → at-a-glance status board → lane editor (tabs) → network notes → 14-day history grid */
+:root{
+  --navy:#0e2a47; --navy-2:#163b61; --orange:#f37021; --orange-soft:#fff1e8;
+  --bg:#f3f5f8; --surface:#ffffff; --surface-2:#f7f9fb; --ink:#17222e; --muted:#5f6f80; --line:#dbe2ea;
+  --g:#1c8f50; --g-soft:#e3f4ea; --y:#b7860b; --y-soft:#fdf3d6; --r:#c2352b; --r-soft:#fbe5e3; --none:#c9d2dc;
+  --on-navy:#ffffff; --on-navy-muted:#a9c1d9;
+  --display:"Barlow Condensed","Segoe UI",system-ui,sans-serif;
+  --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --shadow:0 1px 2px rgba(14,42,71,.06),0 4px 14px rgba(14,42,71,.05);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1520; --surface:#152130; --surface-2:#1a2839; --ink:#e6edf4; --muted:#93a4b6; --line:#2a3a4d;
+  --orange-soft:#3a2415; --g:#3ec27a; --g-soft:#153625; --y:#e5b53a; --y-soft:#3a3016; --r:#f06a5f; --r-soft:#3d1c1a; --none:#3b4a5c;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0d1520; --surface:#152130; --surface-2:#1a2839; --ink:#e6edf4; --muted:#93a4b6; --line:#2a3a4d;
+  --orange-soft:#3a2415; --g:#3ec27a; --g-soft:#153625; --y:#e5b53a; --y-soft:#3a3016; --r:#f06a5f; --r-soft:#3d1c1a; --none:#3b4a5c;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark }
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:linear-gradient(110deg,var(--navy),var(--navy-2));color:var(--on-navy);
+  padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:38px;height:38px;border-radius:8px;background:var(--orange);display:grid;place-items:center;font:700 20px var(--display);color:#fff;flex:none}
+.brand h1{margin:0;font:600 22px/1.1 var(--display);letter-spacing:.3px}
+.brand .sub{font-size:11.5px;color:var(--on-navy-muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600}
+.datebar{margin-left:auto;display:flex;align-items:center;gap:6px}
+.datebar input{border:0;border-radius:7px;padding:7px 9px;font-weight:600;background:#fff;color:#0e2a47;color-scheme:light}
+.icon-btn{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:7px;width:34px;height:34px;cursor:pointer;font-size:18px}
+.icon-btn:hover{background:rgba(255,255,255,.22)}
+.me-box{display:flex;align-items:center;gap:8px}
+.me-box label{font-size:11px;color:var(--on-navy-muted);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.me-box select{border:0;border-radius:7px;padding:7px 9px;font-weight:600;background:#fff;color:#0e2a47;color-scheme:light}
+.today-btn{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:7px;padding:6px 10px;cursor:pointer;font-weight:600;font-size:13px}
+
+main.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 60px;display:grid;gap:22px}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.panel-head h2{margin:0;font:600 20px/1.2 var(--display);letter-spacing:.3px;text-wrap:balance}
+.panel-head .hint{color:var(--muted);font-size:13px}
+.panel-head .spacer{flex:1}
+.panel-body{padding:16px 18px}
+.banner{padding:10px 14px;border-radius:8px;font-size:13.5px;background:var(--orange-soft);border:1px solid var(--orange);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:13px}
+
+/* status board */
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+.board th{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:center;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.board th:first-child,.board td:first-child{text-align:left}
+.board td{padding:12px 8px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+.board tr:last-child td{border-bottom:0}
+.board tbody tr{cursor:pointer}
+.board tbody tr:hover td{background:var(--surface-2)}
+.lane-cell{display:flex;align-items:center;gap:12px;min-width:220px}
+.stripe{width:5px;align-self:stretch;border-radius:3px;background:var(--none);flex:none}
+.stripe.G{background:var(--g)} .stripe.Y{background:var(--y)} .stripe.R{background:var(--r)}
+.cc{font:700 24px/1 var(--display);color:var(--navy)}
+:root[data-theme="dark"] .cc{color:var(--ink)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .cc{color:var(--ink)} }
+.lane-name{font-weight:600;font-size:14px}
+.lane-owner{font-size:12.5px;color:var(--muted)}
+.chip{display:inline-grid;place-items:center;min-width:34px;height:26px;padding:0 8px;border-radius:13px;font:700 12px var(--body);letter-spacing:.5px;background:var(--surface-2);color:var(--muted);border:1px dashed var(--none)}
+.chip.G{background:var(--g-soft);color:var(--g);border:1px solid var(--g)}
+.chip.Y{background:var(--y-soft);color:var(--y);border:1px solid var(--y)}
+.chip.R{background:var(--r-soft);color:var(--r);border:1px solid var(--r)}
+.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.upd{font-size:12px;color:var(--muted);white-space:nowrap}
+.pending{color:var(--muted);font-style:italic;font-size:13px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+
+/* editor */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px 0}
+.tab{border:1px solid var(--line);border-bottom:0;background:var(--surface-2);border-radius:8px 8px 0 0;padding:9px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--muted)}
+.tab .t-cc{font:700 20px/1 var(--display)}
+.tab.active{background:var(--surface);color:var(--ink);box-shadow:inset 0 3px 0 var(--orange)}
+.tab .dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.editor-top{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;margin-bottom:16px}
+.field{display:grid;gap:5px;min-width:0}
+.field label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.field input[type=text],.field input[type=number],.field select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 10px;width:100%}
+textarea{min-height:84px;resize:vertical}
+.field.owner{flex:1 1 220px}
+.field.small{width:120px}
+
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.cat{border:1px solid var(--line);border-radius:9px;padding:12px;display:grid;gap:9px;background:var(--surface-2)}
+.cat.G{border-color:var(--g)} .cat.Y{border-color:var(--y)} .cat.R{border-color:var(--r)}
+.cat h3{margin:0;font:600 17px var(--display);letter-spacing:.3px}
+.ryg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ryg button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 0;cursor:pointer;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ryg button i{width:10px;height:10px;border-radius:50%;display:block}
+.ryg .G i{background:var(--g)} .ryg .Y i{background:var(--y)} .ryg .R i{background:var(--r)}
+.ryg button.on.G{background:var(--g);border-color:var(--g);color:#fff}
+.ryg button.on.Y{background:var(--y);border-color:var(--y);color:#fff}
+.ryg button.on.R{background:var(--r);border-color:var(--r);color:#fff}
+.ryg button.on i{background:#fff}
+.cat input{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:7px 9px;width:100%;font-size:13.5px}
+
+.segs{margin-bottom:18px}
+.segs table{min-width:880px;font-size:13.5px}
+.segs th{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap}
+.segs th.grp{font:600 14px var(--display);letter-spacing:.8px;color:var(--ink);border-bottom:2px solid var(--line)}
+.segs th.grp.am{border-bottom-color:var(--orange)} .segs th.grp.pm{border-bottom-color:var(--navy-2)}
+.segs td{padding:4px;text-align:center;border-top:1px solid var(--line)}
+.segs td:first-child,.segs th:first-child{text-align:left;padding-left:0}
+.segs td.name{font-weight:500;white-space:nowrap;padding-right:10px}
+.segs input{width:54px;text-align:center;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 2px;font-variant-numeric:tabular-nums}
+.segs input.plan{background:var(--surface-2);color:var(--muted)}
+.segs .moves{font-weight:700;font-variant-numeric:tabular-nums;min-width:44px}
+.segs tr.total td{font-weight:700;border-top:2px solid var(--line)}
+.segs .sep{border-left:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.save-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-end;border-top:1px solid var(--line);padding-top:14px}
+.save-state{margin-right:auto;font-size:13px;color:var(--muted)}
+.save-state.dirty{color:var(--orange);font-weight:600}
+
+/* history */
+.hist table{font-size:12px;min-width:640px}
+.hist th{font-weight:600;color:var(--muted);padding:4px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hist td{padding:3px;text-align:center}
+.hist td.rl{text-align:left;white-space:nowrap;padding-right:10px;color:var(--muted)}
+.hist tr.lanehead td{padding-top:12px;font:700 15px var(--display);color:var(--ink);text-align:left}
+.sq{width:22px;height:18px;border-radius:4px;display:inline-block;background:var(--surface-2);border:1px dashed var(--none)}
+.sq.G{background:var(--g);border:0} .sq.Y{background:var(--y);border:0} .sq.R{background:var(--r);border:0}
+.hist th.sel{color:var(--orange)}
+
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:9px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ro-note{font-size:13px;color:var(--muted)}
+@media (max-width:700px){
+  .two{grid-template-columns:1fr}
+  .datebar{margin-left:0;width:100%}
+  .datebar input{flex:1}
+}
+@media (prefers-reduced-motion:reduce){ .toast{transition:none} }
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">E</div>
+    <div>
+      <h1>Expedited Daily Lane Brief</h1>
+      <div class="sub">Lanes 151 · 147 · 135 · Hirschbach</div>
+    </div>
+  </div>
+  <div class="datebar">
+    <button class="icon-btn" id="prevDay" title="Previous day" aria-label="Previous day">‹</button>
+    <input type="date" id="opDate" aria-label="Operating day">
+    <button class="icon-btn" id="nextDay" title="Next day" aria-label="Next day">›</button>
+    <button class="today-btn" id="todayBtn">Today</button>
+  </div>
+  <div class="me-box"><label for="meName">You are</label><select id="meName"></select></div>
+</header>
+
+<main class="wrap">
+  <div id="connNote" class="banner" hidden></div>
+
+  <section class="panel" id="boardPanel">
+    <div class="panel-head">
+      <h2 id="boardTitle">Network at a glance</h2>
+      <span class="hint">Click a lane to update it</span>
+      <span class="spacer"></span>
+      <button class="btn sm" id="copySummary">Copy summary</button>
+    </div>
+    <div class="scroll">
+      <table class="board">
+        <thead><tr>
+          <th>Lane</th><th>Drivers</th><th>1st / Final</th><th>Freight</th><th>Equip</th><th>Other</th>
+          <th>Open shifts</th><th>AM moves</th><th>PM moves</th><th>Last update</th>
+        </tr></thead>
+        <tbody id="boardBody"></tbody>
+      </table>
+    </div>
+    <div class="panel-body" style="padding-top:10px">
+      <div class="legend">
+        <span><span class="chip G">G</span> On track</span>
+        <span><span class="chip Y">Y</span> Watch / at risk</span>
+        <span><span class="chip R">R</span> Issue, needs support</span>
+        <span><span class="chip">–</span> Not updated yet</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="editorPanel">
+    <div class="panel-head">
+      <h2>Update your lane</h2>
+      <span class="hint" id="editorHint">Pick your lane, set each category, then Save.</span>
+    </div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="panel-body" id="editor"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Network &amp; support notes</h2>
+      <span class="hint">Items that span every lane: PTO, planning, customer service, sales, driver experience.</span>
+    </div>
+    <div class="panel-body" style="display:grid;gap:10px">
+      <textarea id="netNotes" placeholder="e.g. Kristi on PTO Thu/Fri. Planning: truck moves update from Nate. Driver Experience: focus on retaining drivers."></textarea>
+      <div class="save-row" style="border:0;padding:0">
+        <span class="save-state" id="netState"></span>
+        <button class="btn primary" id="saveNet">Save notes</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel hist">
+    <div class="panel-head">
+      <h2>Last 14 days</h2>
+      <span class="hint">Status by category, ending on the selected day. Click a day to open it.</span>
+    </div>
+    <div class="panel-body scroll" id="histWrap"></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* =====================================================================
+   SHARED DATABASE SETTINGS: paste your two Supabase values here.
+   Supabase > Project Settings > API (or "API Keys"):
+     SUPABASE_URL = the Project URL, e.g. https://abcdefgh.supabase.co
+     SUPABASE_KEY = the "anon public" or "publishable" key
+   Leave them as-is and the page saves in each browser only.
+   ===================================================================== */
+const SUPABASE_URL = "https://jlykfbtrvtcbfggpmcpx.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_n6HADuw0rDOao8Xik-JJYg_UFUTIaNB";
+
+/* ---------- lane configuration (plan values from the AM Brief workbook) ---------- */
+const LANES = [
+  { id:"151", name:"Sapulpa, OK Hub → North / South", owner:"Sara Weltz", segs:[
+    {n:"Sapulpa → Kansas City, MO", am:4, pm:4},
+    {n:"Kansas City, MO → Sapulpa", am:4, pm:4},
+    {n:"Denton, TX → Sapulpa", am:4, pm:4},
+    {n:"Sapulpa → Denton, TX", am:4, pm:4} ]},
+  { id:"147", name:"West Coast Corridor (CA → TX)", owner:"Amye Alvarez", segs:[
+    {n:"San Bernardino, CA ⇆ Quartzsite, AZ", am:3, pm:3},
+    {n:"Quartzsite, AZ ⇆ Tucson, AZ", am:3, pm:3},
+    {n:"Tucson, AZ ⇆ Las Cruces, NM", am:3, pm:3},
+    {n:"Las Cruces, NM → Toyah, TX (live swap)", am:3, pm:3},
+    {n:"Toyah, TX (live swap) ⇆ Merkel, TX", am:3, pm:3},
+    {n:"Merkel, TX ⇆ Aledo, TX", am:2, pm:2} ]},
+  { id:"135", name:"Aurora · Aledo, TX ⇆ Phoenix, AZ", owner:"Sean Moser", segs:[
+    {n:"Aledo, TX → Phoenix, AZ", am:2, pm:2},
+    {n:"Phoenix, AZ → Aledo, TX", am:2, pm:2} ]}
+];
+const CATS = [
+  {k:"drivers", l:"Drivers", short:"Drivers"},
+  {k:"first",   l:"1st / Final", short:"1st/Final"},
+  {k:"freight", l:"Freight", short:"Freight"},
+  {k:"equip",   l:"Equipment", short:"Equip"},
+  {k:"other",   l:"Other", short:"Other"}
+];
+const OWNERS = ["Allen Allday","Amye Alvarez","Angela Lazarin","Bonnie Brooks","Brandon Reyna","Brian Stewart","Bryan Ryder","Casey Raick","Cecil Watts","Chelsie Bebber","David Klement","Joe Adams","John Hessler","Jordan Fream","Josh Catton","Krista Vokey","Kristi Noland","Lacey Curry","Lyndi Curry","Mike Howell","Nate Kratz","Regina Henson","Rober Williams","Samsung Rivera","Sara Weltz","Sean Moser","Tyler Romine"];
+function ownerOptions(cur){
+  const list=OWNERS.slice(); if(cur && !list.includes(cur)) list.unshift(cur);
+  return `<option value=""${cur?"":" selected"}>Select an owner…</option>` + list.map(n=>`<option${n===cur?" selected":""}>${esc(n)}</option>`).join("");
+}
+const SLABEL = {G:"Green",Y:"Yellow",R:"Red"};
+const NUMF = ["amPlan","amAct","amEmpty","amOtr","amExp","pmPlan","pmAct","pmEmpty","pmOtr","pmExp"];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function isoLocal(d){ const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); }
+function todayISO(){ return isoLocal(new Date()); }
+function addDays(iso,n){ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return isoLocal(d); }
+function fmtShort(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-US",{weekday:"short",month:"numeric",day:"numeric"}); }
+function fmtLong(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}); }
+function fmtTime(ts){ if(!ts) return ""; const d=new Date(ts); return d.toLocaleString("en-US",{month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit"}); }
+function num(v){ if(v===""||v===null||v===undefined) return null; const n=Number(v); return isFinite(n)?n:null; }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2400); }
+function laneById(id){ return LANES.find(l=>l.id===id); }
+function worst(status){ const v=Object.values(status||{}); return v.includes("R")?"R":v.includes("Y")?"Y":v.includes("G")?"G":""; }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+function blankDraft(lane){
+  return { owner:lane.owner, status:{}, catNotes:{}, openShifts:null, freight:"", callouts:"",
+    segs: lane.segs.map(s=>({n:s.n, amPlan:s.am, amAct:null, amEmpty:null, amOtr:null, amExp:null, pmPlan:s.pm, pmAct:null, pmEmpty:null, pmOtr:null, pmExp:null})) };
+}
+function segMoves(s,p){ const a=num(s[p+"Act"]); if(a===null) return null; return a-(num(s[p+"Empty"])||0)-(num(s[p+"Otr"])||0); }
+function totals(segs,p){
+  let plan=0, moves=0, any=false;
+  (segs||[]).forEach(s=>{ plan+=num(s[p+"Plan"])||0; const m=segMoves(s,p); if(m!==null){ moves+=m; any=true; } });
+  return {plan, moves: any?moves:null};
+}
+
+/* ---------- state ---------- */
+const state = {
+  date: todayISO(),
+  lane: (laneById(lsGet("elb_lane")) ? lsGet("elb_lane") : "151"),
+  histDocs: {},        // key date_lane -> data
+  netDoc: null,
+  drafts: {},          // key date_lane -> {data, dirty, stale}
+  db: null, user: null, uid: null, canWrite: true,
+  names: {}
+};
+const key = (d,l)=>d+"_"+l;
+const dayDoc = l => state.histDocs[key(state.date,l)] || null;
+
+function getDraft(){
+  const k=key(state.date,state.lane);
+  if(!state.drafts[k]){
+    const saved=dayDoc(state.lane);
+    state.drafts[k]={ data: saved ? normalize(clone(saved), laneById(state.lane)) : blankDraft(laneById(state.lane)), dirty:false, stale:false };
+  }
+  return state.drafts[k];
+}
+function normalize(d,lane){
+  const b=blankDraft(lane);
+  const out=Object.assign(b,d);
+  out.status=out.status||{}; out.catNotes=out.catNotes||{};
+  if(!Array.isArray(out.segs)||!out.segs.length) out.segs=b.segs;
+  return out;
+}
+
+/* ---------- rendering: board ---------- */
+async function resolveNames(){
+  if(!state.user) return;
+  const ids=new Set();
+  Object.values(state.histDocs).forEach(d=>d.updatedBy&&ids.add(d.updatedBy));
+  if(state.netDoc&&state.netDoc.updatedBy) ids.add(state.netDoc.updatedBy);
+  if(!ids.size) return;
+  try{ const ps=await state.user.profiles([...ids]); Object.keys(ps).forEach(id=>state.names[id]=ps[id].name||""); }catch(e){}
+}
+function who(doc){ if(!doc) return "Someone"; return doc.updatedByName || (doc.updatedBy && state.names[doc.updatedBy]) || "Someone"; }
+
+function renderBoard(){
+  $("#boardTitle").textContent = "Network at a glance · " + fmtLong(state.date);
+  $("#boardBody").innerHTML = LANES.map(l=>{
+    const d=dayDoc(l.id);
+    const st=d?d.status||{}:{};
+    const am=d?totals(d.segs,"am"):null, pm=d?totals(d.segs,"pm"):null;
+    const chips=CATS.map(c=>{ const v=st[c.k]||""; const note=d&&d.catNotes&&d.catNotes[c.k]?d.catNotes[c.k]:"";
+      return `<td><span class="chip ${v}" title="${esc(c.l+": "+(SLABEL[v]||"not set")+(note?" — "+note:""))}">${v||"–"}</span></td>`; }).join("");
+    const mv=t=> t&&t.moves!==null ? `${t.moves}/${t.plan}` : (t?`<span class="pending">–/${t.plan}</span>`:"–");
+    return `<tr data-lane="${l.id}">
+      <td><div class="lane-cell"><span class="stripe ${d?worst(st):""}"></span><span class="cc">${l.id}</span>
+        <div><div class="lane-name">${esc(l.name)}</div><div class="lane-owner">${esc(d&&d.owner?d.owner:l.owner)}</div></div></div></td>
+      ${chips}
+      <td class="num">${d&&d.openShifts!==null&&d.openShifts!==undefined?esc(d.openShifts):"–"}</td>
+      <td class="num">${mv(am)}</td><td class="num">${mv(pm)}</td>
+      <td class="upd">${d?esc(fmtTime(d.updatedAt))+"<br>"+esc(who(d)):'<span class="pending">No update yet</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ---------- rendering: editor ---------- */
+function renderTabs(){
+  $("#tabs").innerHTML = LANES.map(l=>{
+    const dr=state.drafts[key(state.date,l.id)];
+    return `<button class="tab ${l.id===state.lane?"active":""}" role="tab" aria-selected="${l.id===state.lane}" data-lane="${l.id}">
+      <span class="t-cc">${l.id}</span><span>${esc(l.name.split(" · ")[0].split(" (")[0])}</span>${dr&&dr.dirty?'<span class="dot" title="Unsaved changes"></span>':""}</button>`;
+  }).join("");
+}
+
+function numInput(i,f,v,cls){ return `<input type="number" min="0" inputmode="numeric" id="s_${i}_${f}" data-seg="${i}" data-f="${f}" class="${cls||""}" value="${v===null||v===undefined?"":esc(v)}" aria-label="${f}">`; }
+
+function renderEditor(){
+  renderTabs();
+  const lane=laneById(state.lane), dr=getDraft(), d=dr.data, saved=dayDoc(state.lane);
+  const prev=findPrevious(state.lane);
+  const ro=!state.canWrite;
+  const cats=CATS.map(c=>{
+    const v=d.status[c.k]||"";
+    return `<div class="cat ${v}"><h3>${c.l}</h3>
+      <div class="ryg" role="radiogroup" aria-label="${c.l} status">
+        ${["G","Y","R"].map(s=>`<button type="button" class="${s} ${v===s?"on":""}" data-cat="${c.k}" data-s="${s}" role="radio" aria-checked="${v===s}" ${ro?"disabled":""}><i></i>${SLABEL[s]}</button>`).join("")}
+      </div>
+      <input type="text" id="cn_${c.k}" data-catnote="${c.k}" placeholder="${v==="R"||v==="Y"?"What's the issue?":"Optional note"}" value="${esc(d.catNotes[c.k]||"")}" ${ro?"disabled":""}>
+    </div>`;
+  }).join("");
+
+  const segRows=d.segs.map((s,i)=>{
+    const am=segMoves(s,"am"), pm=segMoves(s,"pm");
+    return `<tr><td class="name">${esc(s.n)}</td>
+      <td class="sep">${numInput(i,"amPlan",s.amPlan,"plan")}</td><td>${numInput(i,"amAct",s.amAct)}</td><td>${numInput(i,"amEmpty",s.amEmpty)}</td><td>${numInput(i,"amOtr",s.amOtr)}</td><td>${numInput(i,"amExp",s.amExp)}</td><td class="moves" id="mv_am_${i}">${am===null?"–":am}</td>
+      <td class="sep">${numInput(i,"pmPlan",s.pmPlan,"plan")}</td><td>${numInput(i,"pmAct",s.pmAct)}</td><td>${numInput(i,"pmEmpty",s.pmEmpty)}</td><td>${numInput(i,"pmOtr",s.pmOtr)}</td><td>${numInput(i,"pmExp",s.pmExp)}</td><td class="moves" id="mv_pm_${i}">${pm===null?"–":pm}</td></tr>`;
+  }).join("");
+
+  $("#editor").innerHTML = `
+    ${dr.stale?`<div class="banner" style="margin-bottom:14px">${esc(who(saved))} saved a newer update for this lane at ${esc(fmtTime(saved&&saved.updatedAt))}. <button class="btn sm" id="loadNewer">Load their version</button><span class="ro-note">or keep editing and save to replace it.</span></div>`:""}
+    ${ro?`<div class="banner" style="margin-bottom:14px">You have view access, so you can read this lane but not save. Ask the page owner for Contributor access.</div>`:""}
+    <div class="editor-top">
+      <div class="field owner"><label for="f_owner">Lane owner today</label><select id="f_owner" ${ro?"disabled":""}>${ownerOptions(d.owner)}</select></div>
+      <div class="field small"><label for="f_open">Open shifts</label><input type="number" min="0" id="f_open" value="${d.openShifts===null||d.openShifts===undefined?"":esc(d.openShifts)}" ${ro?"disabled":""}></div>
+      ${!saved&&prev&&!ro?`<button class="btn" id="copyPrev" title="Copies owner, statuses, notes and open shifts from ${esc(fmtShort(prev.date))}. Actual counts start blank.">Start from ${esc(fmtShort(prev.date))}</button>`:""}
+    </div>
+    <div class="lbl" style="margin-bottom:8px">Opportunities · set Red, Yellow or Green</div>
+    <div class="cats">${cats}</div>
+    <div class="lbl" style="margin-bottom:4px">Hub departs vs plan · Moves = Actual − Empty − OTR fill-in</div>
+    <div class="segs scroll"><table>
+      <thead>
+        <tr><th></th><th colspan="6" class="grp am">AM</th><th colspan="6" class="grp pm">PM</th></tr>
+        <tr><th>Segment</th><th class="sep">Plan</th><th>Actual</th><th>Empty</th><th>OTR fill</th><th>EXP fill</th><th>Moves</th>
+            <th class="sep">Plan</th><th>Actual</th><th>Empty</th><th>OTR fill</th><th>EXP fill</th><th>Moves</th></tr>
+      </thead>
+      <tbody>${segRows}</tbody>
+      <tfoot><tr class="total" id="segTotal"></tr></tfoot>
+    </table></div>
+    <div class="two">
+      <div class="field"><label for="f_freight">High-level freight needs</label><textarea id="f_freight" placeholder="Loads needed, pushes, cancels…" ${ro?"disabled":""}>${esc(d.freight)}</textarea></div>
+      <div class="field"><label for="f_callouts">Key callouts</label><textarea id="f_callouts" placeholder="Trailer issues, staffing, missed loads, support needed…" ${ro?"disabled":""}>${esc(d.callouts)}</textarea></div>
+    </div>
+    <div class="save-row">
+      <span class="save-state ${dr.dirty?"dirty":""}" id="saveState">${saveStateText(dr,saved)}</span>
+      <button class="btn primary" id="saveLane" ${ro?"disabled":""}>Save ${lane.id} update</button>
+    </div>`;
+  if(ro) $("#editor").querySelectorAll(".segs input").forEach(i=>i.disabled=true);
+  renderSegTotal();
+}
+function saveStateText(dr,saved){
+  if(dr.dirty) return "Unsaved changes";
+  if(saved) return "Saved " + fmtTime(saved.updatedAt) + " by " + who(saved);
+  return "Not saved yet for " + fmtShort(state.date);
+}
+function renderSegTotal(){
+  const d=getDraft().data, a=totals(d.segs,"am"), p=totals(d.segs,"pm");
+  const sum=f=>d.segs.reduce((t,s)=>t+(num(s[f])||0),0);
+  const row=pfx=>{ const t=pfx==="am"?a:p; return `<td class="sep">${t.plan}</td><td>${sum(pfx+"Act")}</td><td>${sum(pfx+"Empty")}</td><td>${sum(pfx+"Otr")}</td><td>${sum(pfx+"Exp")}</td><td class="moves">${t.moves===null?"–":t.moves+"/"+t.plan}</td>`; };
+  const el=$("#segTotal"); if(el) el.innerHTML=`<td>Lane total</td>${row("am")}${row("pm")}`;
+}
+function markDirty(){
+  const dr=getDraft(); if(!dr.dirty){ dr.dirty=true; renderTabs(); }
+  const s=$("#saveState"); if(s){ s.textContent="Unsaved changes"; s.classList.add("dirty"); }
+}
+function findPrevious(laneId){
+  let best=null;
+  Object.values(state.histDocs).forEach(d=>{ if(d.lane===laneId && d.date<state.date && (!best||d.date>best.date)) best=d; });
+  return best;
+}
+
+/* ---------- rendering: notes + history ---------- */
+let netDirty=false;
+function renderNet(){
+  if(!netDirty) $("#netNotes").value = state.netDoc ? (state.netDoc.text||"") : "";
+  $("#netState").textContent = netDirty ? "Unsaved changes" : state.netDoc ? "Saved "+fmtTime(state.netDoc.updatedAt)+" by "+who(state.netDoc) : "";
+  $("#netState").classList.toggle("dirty",netDirty);
+  $("#saveNet").disabled = !state.canWrite;
+  $("#netNotes").disabled = !state.canWrite;
+}
+function renderHistory(){
+  const days=[]; for(let i=13;i>=0;i--) days.push(addDays(state.date,-i));
+  let h=`<table><thead><tr><th></th>${days.map(d=>`<th class="${d===state.date?"sel":""}" data-day="${d}" style="cursor:pointer" title="Open ${fmtLong(d)}">${fmtShort(d).replace(",","")}</th>`).join("")}</tr></thead><tbody>`;
+  LANES.forEach(l=>{
+    h+=`<tr class="lanehead"><td colspan="${days.length+1}">${l.id} · ${esc(l.name)}</td></tr>`;
+    CATS.forEach(c=>{
+      h+=`<tr><td class="rl">${c.l}</td>${days.map(d=>{ const doc=state.histDocs[key(d,l.id)]; const v=doc&&doc.status?doc.status[c.k]||"":"";
+        return `<td><span class="sq ${v}" title="${esc(fmtShort(d)+" · "+c.l+": "+(SLABEL[v]||"no update"))}"></span></td>`; }).join("")}</tr>`;
+    });
+  });
+  $("#histWrap").innerHTML = h+"</tbody></table>";
+}
+function renderAll(){ renderBoard(); renderEditor(); renderNet(); renderHistory(); }
+
+/* ---------- events ---------- */
+$("#boardBody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-lane]"); if(!tr) return; switchLane(tr.dataset.lane); $("#editorPanel").scrollIntoView({behavior:"smooth",block:"start"}); });
+$("#tabs").addEventListener("click",e=>{ const b=e.target.closest(".tab"); if(b) switchLane(b.dataset.lane); });
+function switchLane(id){ state.lane=id; lsSet("elb_lane",id); renderEditor(); }
+
+$("#editor").addEventListener("click",e=>{
+  const b=e.target.closest(".ryg button");
+  if(b){ const d=getDraft().data; d.status[b.dataset.cat] = d.status[b.dataset.cat]===b.dataset.s ? "" : b.dataset.s; markDirty();
+    const box=b.closest(".cat"); const v=d.status[b.dataset.cat]; box.className="cat "+v;
+    box.querySelectorAll(".ryg button").forEach(x=>{ const on=x.dataset.s===v; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); });
+    const inp=box.querySelector("input"); inp.placeholder = v==="R"||v==="Y" ? "What's the issue?" : "Optional note"; if(v==="R"||v==="Y") inp.focus();
+    return; }
+  if(e.target.id==="saveLane") return saveLane();
+  if(e.target.id==="copyPrev") return copyPrevious();
+  if(e.target.id==="loadNewer"){ const k=key(state.date,state.lane); delete state.drafts[k]; renderEditor(); toast("Loaded the latest saved version"); }
+});
+$("#editor").addEventListener("change",e=>{ if(e.target.id==="f_owner"){ getDraft().data.owner=e.target.value; markDirty(); } });
+$("#editor").addEventListener("input",e=>{
+  const t=e.target, d=getDraft().data;
+  if(t.dataset.seg!==undefined){ const i=+t.dataset.seg, f=t.dataset.f; d.segs[i][f]=num(t.value);
+    const p=f.slice(0,2), m=segMoves(d.segs[i],p); const c=$(`#mv_${p}_${i}`); if(c) c.textContent=m===null?"–":m; renderSegTotal(); }
+  else if(t.dataset.catnote) d.catNotes[t.dataset.catnote]=t.value;
+  else if(t.id==="f_owner") return;
+  else if(t.id==="f_open") d.openShifts=num(t.value);
+  else if(t.id==="f_freight") d.freight=t.value;
+  else if(t.id==="f_callouts") d.callouts=t.value;
+  else return;
+  markDirty();
+});
+$("#netNotes").addEventListener("input",()=>{ netDirty=true; $("#netState").textContent="Unsaved changes"; $("#netState").classList.add("dirty"); });
+
+function copyPrevious(){
+  const prev=findPrevious(state.lane); if(!prev) return;
+  const lane=laneById(state.lane), p=normalize(clone(prev),lane), d=blankDraft(lane);
+  d.owner=p.owner; d.status=p.status; d.catNotes=p.catNotes; d.openShifts=p.openShifts; d.freight=p.freight; d.callouts=p.callouts;
+  d.segs=p.segs.map(s=>({...s, amAct:null, amEmpty:null, amOtr:null, amExp:null, pmAct:null, pmEmpty:null, pmOtr:null, pmExp:null}));
+  const dr=getDraft(); dr.data=d; dr.dirty=true; renderEditor(); toast("Copied from "+fmtShort(prev.date)+". Review and save.");
+}
+
+async function saveLane(){
+  const dr=getDraft(), d=dr.data;
+  if(needMe()) return;
+  if(!d.owner){ toast("Select a lane owner before saving"); const o=$("#f_owner"); if(o) o.focus(); return; }
+  const missing=CATS.filter(c=>(d.status[c.k]==="R"||d.status[c.k]==="Y") && !(d.catNotes[c.k]||"").trim());
+  if(missing.length){ toast("Add a note for "+missing.map(c=>c.l).join(", ")); const i=$("#cn_"+missing[0].k); if(i) i.focus(); return; }
+  if(!state.db){ toast("Saving isn't available in this view"); return; }
+  const body=clone(d);
+  body.segs=body.segs.map(s=>{ const o={n:s.n}; NUMF.forEach(f=>o[f]=num(s[f])); return o; });
+  Object.assign(body,{date:state.date, lane:state.lane, updatedBy:state.uid||null, updatedByName:myName(), updatedAt:new Date().toISOString()});
+  const btn=$("#saveLane"); btn.disabled=true; btn.textContent="Saving…";
+  const wasDirty=dr.dirty; dr.dirty=false; dr.stale=false; dr.savingAt=body.updatedAt;
+  try{
+    await withRetry(()=>state.db.doc("briefs/"+key(state.date,state.lane)).set(body));
+    toast("Saved lane "+state.lane+" for "+fmtShort(state.date));
+  }catch(e){
+    dr.dirty=wasDirty;
+    if(e&&e.code==="invalid_argument"&&state.canWrite!==false){ state.canWrite=false; }
+    toast(e&&e.code==="quota_exceeded" ? "Storage is full. Ask the page owner to clear old days." : e&&e.code==="invalid_argument" ? "You don't have permission to save here." : "Couldn't save. Check your connection and try again.");
+  }
+  renderEditor();
+}
+$("#saveNet").addEventListener("click",async()=>{
+  if(!state.db){ toast("Saving isn't available in this view"); return; }
+  if(needMe()) return;
+  const text=$("#netNotes").value;
+  try{ await withRetry(()=>state.db.doc("notes/"+state.date).set({date:state.date,text,updatedBy:state.uid||null,updatedByName:myName(),updatedAt:new Date().toISOString()}));
+    netDirty=false; toast("Notes saved"); }
+  catch(e){ toast("Couldn't save notes. Try again."); }
+  renderNet();
+});
+async function withRetry(fn){ try{ return await fn(); }catch(e){ if(e&&e.code==="unavailable"){ await new Promise(r=>setTimeout(r,400+Math.random()*600)); return fn(); } throw e; } }
+
+$("#copySummary").addEventListener("click",()=>{
+  const lines=["Expedited Daily Lane Brief — "+fmtLong(state.date),""];
+  LANES.forEach(l=>{
+    const d=dayDoc(l.id);
+    lines.push(`${l.id} ${l.name} (${d&&d.owner?d.owner:l.owner})`);
+    if(!d){ lines.push("  No update yet",""); return; }
+    lines.push("  "+CATS.map(c=>{ const v=d.status&&d.status[c.k]; const n=d.catNotes&&d.catNotes[c.k]; return `${c.short}: ${SLABEL[v]||"–"}${n?" ("+n+")":""}`; }).join(" | "));
+    const a=totals(d.segs,"am"), p=totals(d.segs,"pm");
+    lines.push(`  AM moves ${a.moves??"–"}/${a.plan} · PM moves ${p.moves??"–"}/${p.plan} · Open shifts ${d.openShifts??"–"}`);
+    if(d.freight) lines.push("  Freight needs: "+d.freight.replace(/\n+/g,"; "));
+    if(d.callouts) lines.push("  Callouts: "+d.callouts.replace(/\n+/g,"; "));
+    lines.push("");
+  });
+  if(state.netDoc&&state.netDoc.text) lines.push("Network notes: "+state.netDoc.text.replace(/\n+/g,"; "));
+  const text=lines.join("\n");
+  navigator.clipboard.writeText(text).then(()=>toast("Summary copied. Paste into email or Teams."),()=>{
+    const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("Summary copied");}catch(e){ toast("Copy blocked. Select the text manually."); } ta.remove();
+  });
+});
+
+$("#histWrap").addEventListener("click",e=>{ const th=e.target.closest("th[data-day]"); if(th) setDate(th.dataset.day); });
+$("#opDate").addEventListener("change",e=>{ if(e.target.value) setDate(e.target.value); });
+$("#prevDay").addEventListener("click",()=>setDate(addDays(state.date,-1)));
+$("#nextDay").addEventListener("click",()=>setDate(addDays(state.date,1)));
+$("#todayBtn").addEventListener("click",()=>setDate(todayISO()));
+
+function setDate(iso){
+  state.date=iso; $("#opDate").value=iso; netDirty=false;
+  state.netDoc=null;
+  subscribe();
+  renderAll();
+}
+
+/* ---------- data ---------- */
+let unsubBriefs=null, unsubNet=null;
+function subscribe(){
+  if(!state.db) return;
+  if(unsubBriefs) unsubBriefs(); if(unsubNet) unsubNet();
+  const from=addDays(state.date,-13);
+  unsubBriefs = state.db.collection("briefs").where("date",">=",from).where("date","<=",state.date)
+    .onSnapshot(async snap=>{
+      const next={};
+      snap.docs.forEach(doc=>{ const d=doc.data(); if(d&&d.date&&d.lane) next[key(d.date,d.lane)]=d; });
+      // flag drafts whose saved version changed underneath an unsaved edit
+      Object.keys(state.drafts).forEach(k=>{
+        const dr=state.drafts[k], nd=next[k], od=state.histDocs[k];
+        if(!nd || (od && nd.updatedAt===od.updatedAt)) return;
+        if(dr.savingAt && nd.updatedAt===dr.savingAt) return;
+        if(dr.dirty) dr.stale=true; else delete state.drafts[k];
+      });
+      state.histDocs=next;
+      await resolveNames();
+      renderBoard(); renderHistory();
+      if(!(document.activeElement && $("#editor").contains(document.activeElement))) renderEditor();
+      else renderTabs();
+    }, err=>{ showConn("Can't reach the shared database right now. Check your connection; the page retries every minute."); });
+  unsubNet = state.db.doc("notes/"+state.date).onSnapshot(async snap=>{
+    state.netDoc = snap.exists ? snap.data() : null;
+    await resolveNames(); renderNet();
+  }, ()=>{});
+}
+function showConn(msg){ const n=$("#connNote"); n.textContent=msg; n.hidden=false; }
+
+
+/* ---------- browser-only store (used when the page is not opened from Claude, e.g. GitHub Pages) ---------- */
+function makeLocalDB(){
+  const PFX="elb:"; const subs=new Set();
+  const read=()=>{ const out={}; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.indexOf(PFX)===0){ try{ out[k.slice(PFX.length)]=JSON.parse(localStorage.getItem(k)); }catch(e){} } } }catch(e){} return out; };
+  const fire=()=>subs.forEach(f=>f());
+  window.addEventListener("storage",e=>{ if(e.key&&e.key.indexOf(PFX)===0) fire(); });
+  const snapDoc=(id,data)=>({id,exists:!!data,data:()=>data});
+  function query(coll,filters){
+    return { where(f,op,v){ return query(coll,filters.concat([[f,op,v]])); },
+      onSnapshot(next){ const run=()=>{ const all=read(); const docs=Object.keys(all).filter(p=>p.split("/")[0]===coll).map(p=>snapDoc(p.split("/")[1],all[p]))
+          .filter(d=>filters.every(([f,op,v])=>{ const x=d.data()[f]; return op===">="?x>=v:op==="<="?x<=v:op==="=="?x===v:true; }));
+          next({docs,size:docs.length,empty:!docs.length}); };
+        subs.add(run); setTimeout(run,0); return ()=>subs.delete(run); } };
+  }
+  return {
+    collection:c=>query(c,[]),
+    doc:p=>({ onSnapshot(next){ const run=()=>{ const d=read()[p]; next(snapDoc(p.split("/")[1],d||undefined)); }; subs.add(run); setTimeout(run,0); return ()=>subs.delete(run); },
+      async set(data){ try{ localStorage.setItem(PFX+p,JSON.stringify(data)); }catch(e){ throw {code:"unavailable"}; } fire(); } })
+  };
+}
+
+function initMe(){
+  const sel=$("#meName"), cur=lsGet("elb_me")||"";
+  sel.innerHTML=`<option value="">Select your name…</option>`+OWNERS.map(n=>`<option${n===cur?" selected":""}>${esc(n)}</option>`).join("");
+  sel.addEventListener("change",()=>lsSet("elb_me",sel.value));
+}
+function myName(){ return $("#meName").value; }
+function needMe(){ if(myName()) return false; toast("Select your name at the top first"); $("#meName").focus(); return true; }
+function makeSupabaseDB(sb){
+  const T="brief_docs", subs=new Set();
+  const fire=()=>subs.forEach(f=>f());
+  try{ sb.channel("brief_docs_live").on("postgres_changes",{event:"*",schema:"public",table:T},fire).subscribe(); }catch(e){}
+  setInterval(fire,60000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) fire(); });
+  const snapDoc=(id,data)=>({id,exists:!!data,data:()=>data});
+  function query(coll,filters){
+    return { where(f,op,v){ return query(coll,filters.concat([[f,op,v]])); },
+      onSnapshot(next,err){
+        const run=async()=>{
+          let q=sb.from(T).select("path,data").eq("coll",coll);
+          filters.forEach(([f,op,v])=>{ if(f==="date") q = op===">="?q.gte("date",v) : op==="<="?q.lte("date",v) : q.eq("date",v); });
+          const {data,error}=await q;
+          if(error){ err&&err(error); return; }
+          $("#connNote").hidden=true;
+          const docs=(data||[]).map(r=>snapDoc(r.path.split("/")[1],r.data));
+          next({docs,size:docs.length,empty:!docs.length});
+        };
+        subs.add(run); run(); return ()=>subs.delete(run);
+      } };
+  }
+  return {
+    collection:c=>query(c,[]),
+    doc:p=>({
+      onSnapshot(next,err){
+        const run=async()=>{ const {data,error}=await sb.from(T).select("data").eq("path",p).maybeSingle();
+          if(error){ err&&err(error); return; } next(snapDoc(p.split("/")[1], data?data.data:undefined)); };
+        subs.add(run); run(); return ()=>subs.delete(run);
+      },
+      async set(d){
+        const {error}=await sb.from(T).upsert({path:p, coll:p.split("/")[0], date:d.date||null, data:d, updated_at:new Date().toISOString()});
+        if(error) throw {code:"unavailable", message:error.message};
+        fire();
+      }
+    })
+  };
+}
+async function boot(){
+  initMe();
+  $("#opDate").value=state.date;
+  renderAll();
+  const inClaude = !!(window.claude && window.claude.use);
+  let db=null, user=null;
+  if(inClaude){ [db,user]=await Promise.all([claude.use("db"), claude.use("user")]); }
+  state.user=user;
+  if(user){ state.uid=await user.id(); const cw=await user.can("data.write"); if(cw===false) state.canWrite=false; }
+  const configured = /^https:\/\//.test(SUPABASE_URL) && SUPABASE_KEY.indexOf("PASTE_")!==0;
+  if(!db && configured && window.supabase && window.supabase.createClient){
+    db=makeSupabaseDB(window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
+  }
+  if(!db){
+    db=makeLocalDB();
+    showConn("Shared database not connected: updates save in this browser only. Add your Supabase URL and key near the top of index.html to share updates with the team.");
+  }
+  state.db=db;
+  subscribe();
+  renderAll();
+}
+boot();
+</script>
+
+</body>
+</html>
